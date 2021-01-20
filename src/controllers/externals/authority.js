@@ -42,7 +42,10 @@ module.exports.getUserDetailsByUsername = async (
     ).then(async response => {
         if(response.status == 200){
             if(response.data.status == "success"){
-                return response.data.content
+                return {
+                    status: true,
+                    content: response.data.content
+                }
             }
         }
         throw Error("user_not_found");

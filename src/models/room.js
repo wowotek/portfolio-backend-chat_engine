@@ -4,10 +4,10 @@ const models = require("mongoose").model;
 
 const RoomModels = {
     recipients: {
-        // Contain User ID, stored by Authority
+        // Contain Username, stored by Authority
         type: [
             {
-                user_id: {
+                username: {
                     type: String,
                     required: true
                 },

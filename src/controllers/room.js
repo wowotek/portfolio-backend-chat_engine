@@ -1,10 +1,12 @@
 const uuid = require("uuid").v4;
 const crypto = require("crypto");
+
 const Room = require("../models/room").Room;
+const EAuthority = require("./externals/authority");
 
 
 module.exports.createNewRoom = async (
-    creator_recipient_id = null
+    creator_recipient_username= null
 ) => {
     const now = new Date();
     let roomModel = {
@@ -14,10 +16,10 @@ module.exports.createNewRoom = async (
 
     // Recipient Creation
     let recipient;
-    if(creator_recipient_id != null){
+    if(creator_recipient_username != null){
         // For Registered User
         recipient = {
-            user_id: creator_recipient_id,
+            username: creator_recipient_username,
             is_valid_user: true,
             joined: new Date()
         };
@@ -34,19 +36,35 @@ module.exports.createNewRoom = async (
         };
     }
 
-    // Validate User
-    if(recipient.is_valid_user){
-        // TODO: check with authority
-
-        // TODO: throw error if authority's user not found
-    }
-
+    // add Recipient to room
     roomModel.recipients.push(recipient);
-    const room = new Room(roomModel);
-    await room.save();
 
-    return {
-        status: true,
-        content: room
-    }
+    // Validate User and Return
+
+    // TODO: i don't like this syntax, is this better ?
+    if(recipient.is_valid_user)
+        return await EAuthority.getUserDetailsByUsername(creator_recipient_username).then(async result => {
+            if(result.status){
+                const room = new Room(roomModel);
+                return await room.save().then(() => {
+                    return {
+                        status: true,
+                        content: room
+                    }
+                })
+            }
+            throw Error("user_not_found");
+        }).catch(err => {
+            console.log(err.message);
+            throw Error(err.message);
+        });
+    else {
+        const room = new Room(roomModel);
+        return await room.save().then(() => {
+            return {
+                status: true,
+                content: room
+            }
+        });
+    }     
 }
